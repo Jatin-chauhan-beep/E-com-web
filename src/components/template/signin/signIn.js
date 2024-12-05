@@ -14,13 +14,19 @@ import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import SvgIcon from "@mui/material/SvgIcon";
-import { apiCustomerSignInRequest } from "../../../services/AuthService";
+import {
+  apiCustomerSignInRequest,
+  apiUserSignInRequest,
+} from "../../../services/AuthService";
 import { useDispatch } from "react-redux";
 import {
   onSignInSuccess,
   onSignInRequest as signInRequestAction,
 } from "../../../store/auth/sessionSlice";
 import { setUser } from "../../../store/auth/userSlice";
+import { Select } from "@mui/material";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -73,16 +79,13 @@ export default function SignIn(props) {
   const [responseError, setResponseError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [type, settype] = useState("");
 
   const handleSignIn = async () => {
-    if (!validateInputs()) {
-      return;
-    }
     try {
-      const resp = await apiCustomerSignInRequest({
-        email,
-        password,
-      });
+      const resp = await (type === "admin"
+        ? apiUserSignInRequest({ email, password })
+        : apiCustomerSignInRequest({ email, password }));
 
       if (resp.data) {
         const { token } = resp.data;
@@ -98,6 +101,7 @@ export default function SignIn(props) {
         }
       }
     } catch (error) {
+      console.log(error);
       setResponseError(error.message);
     }
   };
@@ -129,6 +133,11 @@ export default function SignIn(props) {
     return isValid;
   };
 
+  const handleSelectChange = (event) => {
+    console.log(event.target.value);
+    settype(event.target.value);
+  };
+
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <Card variant="outlined">
@@ -148,6 +157,19 @@ export default function SignIn(props) {
             gap: 2,
           }}
         >
+          <FormControl>
+            <InputLabel id="demo-simple-select-label">Type</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              value={type}
+              label="type"
+              onChange={handleSelectChange}
+            >
+              <MenuItem value={"admin"}>Admin</MenuItem>
+              <MenuItem value={"customer"}>customer</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl>
             <FormLabel htmlFor="email">Email</FormLabel>
             <TextField

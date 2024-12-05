@@ -4,29 +4,17 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import { RemoveCircleOutline, CheckCircleOutline } from "@mui/icons-material";
+import { CheckCircleOutline } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import Fab from "@mui/material/Fab";
-import { removeProduct, setQuantity } from "../../../store/cart/cartSlice";
+import { clearCart } from "../../../store/cart/cartSlice";
 import { useNavigate } from "react-router-dom";
+import { apiPlaceOrder } from "../../../services/OrderService";
+import { Snackbar } from "@mui/material";
 
 const ProductCard = ({ product }) => {
   const cartProducts = useSelector((state) => state.cart.products);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const handleQuantityChange = (val) => {
-    dispatch(setQuantity({ product_id: product?.product_id, val: val }));
-  };
-
-  const handleRemove = () => {
-    if (cartProducts.length == 1) {
-      navigate("/home");
-      dispatch(removeProduct(product.product_id));
-    } else {
-      dispatch(removeProduct(product.product_id));
-    }
-  };
 
   return (
     <Grid container spacing={2} sx={{ border: "1px solid black" }}>
@@ -61,44 +49,19 @@ const ProductCard = ({ product }) => {
         <Box
           sx={{ display: "flex", alignItems: "center", marginBottom: "16px" }}
         >
-          <Fab
-            color="primary"
-            aria-label="subtract"
-            sx={{ width: 38, height: 30, marginRight: 3 }}
-            onClick={() => handleQuantityChange("dec")}
-            disabled={product?.ProductSizes.quantity === 1}
-          >
-            -
-          </Fab>
-          <span>{product?.ProductSizes.quantity}</span>
-          <Fab
-            color="primary"
-            aria-label="add"
-            sx={{ width: 38, height: 30, marginLeft: 3 }}
-            onClick={() => handleQuantityChange("inc")}
-          >
-            +
-          </Fab>
-        </Box>
-
-        <Box mt={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleRemove}
-            startIcon={<RemoveCircleOutline />}
-          >
-            Remove
-          </Button>
+          Quantity :<span>{product?.ProductSizes.quantity}</span>
         </Box>
       </Grid>
     </Grid>
   );
 };
 
-const Cart = () => {
-  const navigate = useNavigate();
+const Order = () => {
   const cartProducts = useSelector((state) => state.cart.products);
+  const [notification, setNotification] = useState(false);
+  const userData = useSelector((state) => state.auth.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const calculateTotal = () => {
     let totalAmount = 0;
 
@@ -116,10 +79,24 @@ const Cart = () => {
 
   const { totalAmount, finalAmount } = calculateTotal();
 
-  const handlePlace = () => {
-    navigate("/order");
+  const placeOrder = async () => {
+    try {
+      const res = await apiPlaceOrder({
+        customer_id: userData.customer_id,
+        total_amount: totalAmount,
+        delivery_date: new Date(),
+        orderListData: cartProducts,
+      });
+      if (res.status === 201) {
+        setNotification(true);
+        dispatch(clearCart());
+        navigate("/home");
+      }
+    } catch (error) {}
   };
-
+  const handleClose = () => {
+    setNotification(false);
+  };
   return (
     <Box
       className="p-4"
@@ -130,6 +107,12 @@ const Cart = () => {
         gap: 4,
       }}
     >
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={notification}
+        onClose={handleClose}
+        message="Order Placed Successfully"
+      />
       {/* Cart Products */}
       <Box sx={{ flex: 1 }}>
         {cartProducts?.map((product, index) => (
@@ -141,9 +124,9 @@ const Cart = () => {
           color="success"
           startIcon={<CheckCircleOutline />}
           sx={{ marginTop: "20px" }}
-          onClick={handlePlace}
+          onClick={placeOrder}
         >
-          Place Order
+          Done
         </Button>
       </Box>
 
@@ -166,9 +149,13 @@ const Cart = () => {
         <Typography variant="h6" sx={{ marginTop: "16px", fontWeight: "bold" }}>
           Total Amount: ₹{finalAmount.toFixed(2)}
         </Typography>
+
+        <Typography variant="h6" sx={{ marginTop: "16px", fontWeight: "bold" }}>
+          Cash On Delivery
+        </Typography>
       </Box>
     </Box>
   );
 };
 
-export default Cart;
+export default Order;

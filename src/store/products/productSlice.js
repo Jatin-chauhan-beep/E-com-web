@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { apiGetAllProducts } from "../../services/ProductService";
+import { apiCustomerOrders } from "../../services/OrderService";
 
 export const getAllProduct = createAsyncThunk("products/all", async (data) => {
   try {
@@ -10,10 +11,23 @@ export const getAllProduct = createAsyncThunk("products/all", async (data) => {
   }
 });
 
+export const getAllCustomerOrder = createAsyncThunk(
+  "products/customer/order",
+  async (data) => {
+    try {
+      const response = await apiCustomerOrders(data);
+      return response;
+    } catch (error) {
+      return error?.response;
+    }
+  }
+);
+
 export const initialState = {
   products: [],
   selectedProduct: null,
   loading: false,
+  orders: [],
 };
 
 export const cartSlice = createSlice({
@@ -33,6 +47,9 @@ export const cartSlice = createSlice({
       .addCase(getAllProduct.fulfilled, (state, action) => {
         state.loading = false;
         state.products = action.payload.data?.data || [];
+      })
+      .addCase(getAllCustomerOrder.fulfilled, (state, action) => {
+        state.orders = action.payload.data?.data || [];
       });
   },
 });

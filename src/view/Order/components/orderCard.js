@@ -1,20 +1,20 @@
 import React, { useEffect } from "react";
-import ProductCard from "./productCard";
+import OrderCard from "./customerOrder";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllProduct } from "../../../store/products/productSlice";
+import { getAllCustomerOrder } from "../../../store/products/productSlice";
 import { Container } from "@mui/material";
 
-const Products = () => {
+const CustomerOrders = () => {
   const dispatch = useDispatch();
-
+  const userData = useSelector((state) => state.auth.user);
   const fetchData = () => {
-    dispatch(getAllProduct({}));
+    dispatch(getAllCustomerOrder({ customer_id: userData.customer_id }));
   };
   useEffect(() => {
     fetchData();
   }, []);
 
-  const data = useSelector((state) => state.products.products) || [];
+  const data = useSelector((state) => state.products.orders) || [];
 
   return (
     <>
@@ -22,7 +22,7 @@ const Products = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-3 mb-3">
           {data.map((m, index) => (
             <div key={index}>
-              <ProductCard data={m} />
+              <OrderCard data={m} />
             </div>
           ))}
         </div>
@@ -31,4 +31,4 @@ const Products = () => {
   );
 };
 
-export default Products;
+export default CustomerOrders;

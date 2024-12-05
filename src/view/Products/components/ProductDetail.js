@@ -12,16 +12,21 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import Fab from "@mui/material/Fab";
+// import Fab from "@mui/material/Fab";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { setProduct } from "../../../store/cart/cartSlice";
+import { onSignInRequest } from "../../../store/auth/sessionSlice";
 
 const ProductDetails = () => {
   const [sizes, setSizes] = useState(null);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const selectedProduct = useSelector(
     (state) => state.products.selectedProduct
   );
+  const signInStatus = useSelector((state) => state.auth.session.signedIn);
 
   const selectedSize = (size) => {
     setSizes(size);
@@ -39,6 +44,34 @@ const ProductDetails = () => {
     if (!sizes) {
       setOpen(true);
     }
+    dispatch(
+      setProduct({
+        ...selectedProduct,
+        ProductSizes: { ...sizes, quantity: 1 },
+      })
+    );
+    setSizes(null);
+    navigate("/cart");
+  };
+  const BuyNow = () => {
+    if (!sizes) {
+      setOpen(true);
+      return;
+    }
+
+    if (!signInStatus) {
+      dispatch(onSignInRequest(true));
+      return;
+    }
+
+    dispatch(
+      setProduct({
+        ...selectedProduct,
+        ProductSizes: { ...sizes, quantity: 1 },
+      })
+    );
+    setSizes(null);
+    navigate("/Order");
   };
   return (
     <>
@@ -147,6 +180,7 @@ const ProductDetails = () => {
                 variant="contained"
                 color="primary"
                 sx={{ width: 150, marginLeft: 3 }}
+                onClick={BuyNow}
               >
                 Buy Now
               </Button>

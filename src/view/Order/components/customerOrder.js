@@ -5,26 +5,17 @@ import {
   CardMedia,
   Typography,
   Rating,
-  Button,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setSelectedProduct } from "../../../store/products/productSlice";
 
-const ProductCard = ({ data }) => {
+const OrderCard = ({ data }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleNavigate = async () => {
-    await dispatch(setSelectedProduct(data));
-    console.log("Dispatched:", data);
-    navigate("/product/details");
-  };
   return (
-    <Card
-      className="max-w-xs shadow-lg rounded-lg border border-gray-200 cursor-pointer"
-      onClick={handleNavigate}
-    >
+    <Card className="max-w-xs shadow-lg rounded-lg border border-gray-200 cursor-pointer">
       <CardMedia
         component="img"
         height="15"
@@ -38,20 +29,20 @@ const ProductCard = ({ data }) => {
           color="text.secondary"
           className="text-gray-500"
         >
-          Product
+          Ordered Product
         </Typography>
         <Typography variant="subtitle1" className="font-bold mt-2">
-          {data?.name}
+          {data?.Product?.name}
         </Typography>
         <div className="flex items-center mt-2">
           <Rating
-            value={Number(data?.rating).toFixed(1)}
+            value={Number(data?.Product?.rating).toFixed(1)}
             readOnly
             size="small"
             className="mr-2"
           />
           <Typography variant="body2" color="text.secondary">
-            {Number(data.rating).toFixed(1)}
+            {Number(data?.Product?.rating).toFixed(1)}
           </Typography>
         </div>
         <Typography variant="body2" color="text.secondary" className="mt-1">
@@ -62,19 +53,15 @@ const ProductCard = ({ data }) => {
         </Typography>
         <div className="flex items-center mt-4">
           <Typography variant="h6" className="font-bold text-green-700 mr-2">
-            ₹{data?.price}
+            Price ₹{data?.Product?.price}
+          </Typography>
+          <Typography variant="h6" className="font-bold text-green-700 mr-2">
+            Total Amount ₹{data?.Order?.total_amount}
           </Typography>
         </div>
-        {/* <Button
-          variant="contained"
-          className="bg-green-500 text-white mt-4 rounded-full px-4 py-1"
-          fullWidth
-        >
-          View
-        </Button> */}
       </CardContent>
     </Card>
   );
 };
 
-export default ProductCard;
+export default OrderCard;

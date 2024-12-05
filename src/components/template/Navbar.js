@@ -16,7 +16,12 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import { CardTravel } from "@mui/icons-material";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import { useDispatch, useSelector } from "react-redux";
-import { onSignInRequest } from "../../store/auth/sessionSlice";
+import {
+  onSignInRequest,
+  onSignOutSuccess,
+} from "../../store/auth/sessionSlice";
+import { useNavigate } from "react-router-dom";
+import { setUser, initialState } from "../../store/auth/userSlice";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -65,6 +70,7 @@ export default function Navbar() {
   const userData = useSelector((state) => state.auth.user);
 
   const signInStatus = useSelector((state) => state.auth.session.signedIn);
+  const cartProducts = useSelector((state) => state.cart.products);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -85,11 +91,22 @@ export default function Navbar() {
   const handleMobileMenuOpen = (event) => {
     setMobileMoreAnchorEl(event.currentTarget);
   };
-
+  const navigate = useNavigate();
   const handleSignIn = () => {
     dispatch(onSignInRequest(true));
   };
-
+  const myOrders = () => {
+    if (userData.authority.includes("customer")) {
+      navigate("/customer/order");
+    } else {
+      navigate("/all/orders");
+    }
+  };
+  const handleSignOut = () => {
+    dispatch(onSignOutSuccess());
+    dispatch(setUser(initialState));
+    navigate("/home");
+  };
   const menuId = "primary-search-account-menu";
   const renderMenu = (
     <Menu
@@ -107,9 +124,15 @@ export default function Navbar() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
       {signInStatus ? (
-        <MenuItem onClick={handleSignIn}>Logout</MenuItem>
+        <>
+          <MenuItem onClick={myOrders}>
+            {userData.authority.includes("customer")
+              ? "My Orders"
+              : "All Orders"}
+          </MenuItem>
+          <MenuItem onClick={handleSignOut}>Logout</MenuItem>
+        </>
       ) : (
         <MenuItem onClick={handleSignIn}>Login</MenuItem>
       )}
@@ -158,27 +181,15 @@ export default function Navbar() {
     </Menu>
   );
 
+  const handleCart = () => {
+    if (cartProducts.length !== 0) {
+      navigate("/cart");
+    }
+  };
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ display: { xs: "none", sm: "block" } }}
-          >
-            MUI
-          </Typography>
           <Search>
             <SearchIconWrapper>
               <SearchIcon />
@@ -195,9 +206,13 @@ export default function Navbar() {
               aria-label="show 17 new notifications"
               color="inherit"
             >
-              <Badge badgeContent={17} color="error">
-                <CardTravel />
-              </Badge>
+              {cartProducts?.length == 0 ? (
+                <CardTravel onClick={handleCart} />
+              ) : (
+                <Badge badgeContent={cartProducts?.length} color="error">
+                  <CardTravel onClick={handleCart} />
+                </Badge>
+              )}
             </IconButton>
             <IconButton
               size="large"
@@ -209,7 +224,7 @@ export default function Navbar() {
               color="inherit"
             >
               <AccountCircle />
-              <Box>Jatin</Box>
+              <span>{userData.name}</span>
             </IconButton>
           </Box>
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
